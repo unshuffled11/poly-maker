@@ -32,8 +32,11 @@ def process_price_change(asset, side, price_level, new_size):
 def process_data(json_datas, trade=True):
 
     for json_data in json_datas:
-        event_type = json_data['event_type']
-        asset = json_data['market']
+        event_type = json_data.get('event_type')  # 用 .get() 避免 KeyError
+        asset = json_data.get('market')
+        
+        if not event_type or not asset:  # 如果缺少必要資料就跳過
+            continue
 
         if event_type == 'book':
             process_book_data(asset, json_data)
@@ -42,7 +45,15 @@ def process_data(json_datas, trade=True):
                 asyncio.create_task(perform_trade(asset))
                 
         elif event_type == 'price_change':
-            for data in json_data['changes']:
+            # 檢查是用 'price_changes' 還是 'changes'
+            if 'price_changes' in json_data:
+                changes = json_data['price_changes']
+            elif 'changes' in json_data:
+                changes = json_data['changes']
+            else:
+                continue  # 如果都沒有就跳過
+                
+            for data in changes:
                 side = 'bids' if data['side'] == 'BUY' else 'asks'
                 price_level = float(data['price'])
                 new_size = float(data['size'])

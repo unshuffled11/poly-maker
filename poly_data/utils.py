@@ -6,6 +6,10 @@ import os
 def pretty_print(txt, dic):
     print("\n", txt, json.dumps(dic, indent=4))
 
+# 在 poly_data/utils.py 中修改 get_sheet_df() 函數
+
+# 在 poly_data/utils.py 中修改 get_sheet_df() 函數
+
 def get_sheet_df(read_only=None):
     """
     Get sheet data with optional read-only mode
@@ -37,7 +41,14 @@ def get_sheet_df(read_only=None):
     df2 = pd.DataFrame(wk2.get_all_records())
     df2 = df2[df2['question'] != ""].reset_index(drop=True)
 
-    result = df.merge(df2, on='question', how='inner')
+    # 修改這裡：只從 df2 選擇 df 中不存在的欄位（但保留 question 用於合併）
+    # 找出 df2 中有但 df 中沒有的欄位
+    cols_to_add = [col for col in df2.columns if col not in df.columns]
+    
+    # 合併時只添加這些新欄位
+    df2_filtered = df2[['question'] + cols_to_add]
+    
+    result = df.merge(df2_filtered, on='question', how='inner')
 
     wk_p = spreadsheet.worksheet('Hyperparameters')
     records = wk_p.get_all_records()

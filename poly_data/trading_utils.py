@@ -26,9 +26,27 @@ import poly_data.global_state as global_state
 #     return api_avgPrice
 
 def get_best_bid_ask_deets(market, name, size, deviation_threshold=0.05):
+    # 檢查 market 是否存在
+    if market not in global_state.all_data:
+        print(f"WARNING: Market {market} not in all_data!")
+        return None
+    
+    print(f"DEBUG: Getting bids/asks for market {market}, name {name}")
+    print(f"  Bids count: {len(global_state.all_data[market]['bids'])}")
+    print(f"  Asks count: {len(global_state.all_data[market]['asks'])}")
+    if len(global_state.all_data[market]['bids']) > 0:
+        print(f"  Top 3 bids: {list(global_state.all_data[market]['bids'].items())[-3:]}")
+    if len(global_state.all_data[market]['asks']) > 0:
+        print(f"  Top 3 asks: {list(global_state.all_data[market]['asks'].items())[:3]}")
 
     best_bid, best_bid_size, second_best_bid, second_best_bid_size, top_bid = find_best_price_with_size(global_state.all_data[market]['bids'], size, reverse=True)
     best_ask, best_ask_size, second_best_ask, second_best_ask_size, top_ask = find_best_price_with_size(global_state.all_data[market]['asks'], size, reverse=False)
+    
+    # 如果找不到足夠大的訂單,返回 None
+    if best_bid is None or best_ask is None:
+        print(f"WARNING: Could not find orders with size >= {size} for market {market}, name {name}")
+        print(f"  best_bid: {best_bid}, best_ask: {best_ask}")
+        return None
     
     # Handle None values in mid_price calculation
     if best_bid is not None and best_ask is not None:
@@ -61,9 +79,7 @@ def get_best_bid_ask_deets(market, name, size, deviation_threshold=0.05):
                 top_ask = 1 - top_ask
             bid_sum_within_n_percent, ask_sum_within_n_percent = ask_sum_within_n_percent, bid_sum_within_n_percent
 
-
-
-    #return as dictionary
+    # Return as dictionary
     return {
         'best_bid': best_bid,
         'best_bid_size': best_bid_size,

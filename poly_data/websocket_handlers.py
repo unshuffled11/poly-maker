@@ -36,6 +36,11 @@ async def connect_market_websocket(chunk):
             while True:
                 message = await websocket.recv()
                 json_data = json.loads(message)
+                
+                # 修改這裡：將單個 JSON 對象包裝成列表
+                if isinstance(json_data, dict):
+                    json_data = [json_data]
+                
                 # Process order book updates and trigger trading as needed
                 process_data(json_data)
         except websockets.ConnectionClosed:
@@ -85,6 +90,11 @@ async def connect_user_websocket():
             while True:
                 message = await websocket.recv()
                 json_data = json.loads(message)
+                
+                # 修改這裡：將單個 JSON 對象包裝成列表
+                if isinstance(json_data, dict):
+                    json_data = [json_data]
+                
                 # Process trade and order updates
                 process_user_data(json_data)
         except websockets.ConnectionClosed:
